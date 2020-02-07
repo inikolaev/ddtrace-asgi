@@ -1,3 +1,5 @@
+import re
+
 from ddtrace import Tracer
 from starlette.types import Receive, Scope, Send
 
@@ -42,10 +44,25 @@ async def exception(scope: Scope, receive: Receive, send: Send) -> None:
     raise exc
 
 
+async def path_parameters(scope: Scope, receive: Receive, send: Send) -> None:
+    assert scope["type"] == "http"
+    parameter = scope["path"].split("/")[2]
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [[b"content-type", b"text/plain"]],
+        }
+    )
+    await send({"type": "http.response.body", "body": f"Hello, {parameter}!".encode()})
+
+
 async def application(scope: Scope, receive: Receive, send: Send) -> None:
     if scope["path"] == "/child":
         await child(scope, receive, send)
     elif scope["path"] == "/exception":
         await exception(scope, receive, send)
+    elif re.match(r"/path-parameters/[^/]+", scope["path"]):
+        await path_parameters(scope, receive, send)
     else:
         await hello_world(scope, receive, send)

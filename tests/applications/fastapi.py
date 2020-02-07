@@ -24,3 +24,8 @@ async def child(request: Request) -> str:
 @application.get("/exception")
 async def exception() -> typing.NoReturn:
     raise RuntimeError("Oops")
+
+
+@application.get("/path-parameters/{parameter}", response_class=PlainTextResponse)
+async def path_parameters(parameter: str) -> str:
+    return f"Hello, {parameter}!"
