@@ -6,8 +6,9 @@ from ddtrace.ext import http as http_tags
 from ddtrace.http import store_request_headers, store_response_headers
 from ddtrace.propagation.http import HTTPPropagator
 from ddtrace.settings import config
-from starlette.datastructures import CommaSeparatedStrings, Headers
+from starlette.datastructures import CommaSeparatedStrings, Headers, URL
 from starlette.requests import Request
+from starlette.routing import Match
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
@@ -106,7 +107,23 @@ class TraceMiddleware:
             span.set_traceback()
             raise exc from None
         finally:
+            self.enrich_span(span, scope, method)
             span.finish()
+    
+    def enrich_span(self, span, scope: Scope, method: str):
+        if 'router' in scope:
+            path = None
+            routes = getattr(scope['router'], 'routes', [])
+            for route in routes:
+                match, _ = route.matches(scope)
+                if match == Match.FULL:
+                    path = route.path
+                    break
+                elif match == Match.PARTIAL and path is None:
+                    path = route.path
+
+            if path is not None:
+                span.resource = f'{method} {path}'
 
 
 def parse_tags(value: str) -> typing.Dict[str, str]:
