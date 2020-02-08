@@ -107,10 +107,10 @@ class TraceMiddleware:
             span.set_traceback()
             raise exc from None
         finally:
-            self.enrich_span(span, scope, method)
+            self.__enrich_span(span, scope, method)
             span.finish()
 
-    def enrich_span(self, span: Span, scope: Scope, method: str) -> None:
+    def __enrich_span(self, span: Span, scope: Scope, method: str) -> None:
         if "router" in scope:
             path = None
             routes = getattr(scope["router"], "routes", [])
