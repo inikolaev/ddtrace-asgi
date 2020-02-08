@@ -126,9 +126,15 @@ async def test_child(client: httpx.AsyncClient, tracer: Tracer) -> None:
 
 
 @pytest.mark.asyncio
-async def test_path_parameters_full_match(application: ASGIApp, client: httpx.Client, tracer: Tracer) -> None:
+async def test_path_parameters_full_match(
+    application: ASGIApp, client: httpx.AsyncClient, tracer: Tracer
+) -> None:
     is_raw = application.__module__ == "tests.applications.raw"
-    resource = "GET /path-parameters/some-path-parameter" if is_raw else "GET /path-parameters/{parameter}"
+    resource = (
+        "GET /path-parameters/some-path-parameter"
+        if is_raw
+        else "GET /path-parameters/{parameter}"
+    )
 
     start = time.time()
     r = await client.get("/path-parameters/some-path-parameter")
@@ -155,9 +161,15 @@ async def test_path_parameters_full_match(application: ASGIApp, client: httpx.Cl
 
 
 @pytest.mark.asyncio
-async def test_path_parameters_partial_match(application: ASGIApp, client: httpx.Client, tracer: Tracer) -> None:
+async def test_path_parameters_partial_match(
+    application: ASGIApp, client: httpx.AsyncClient, tracer: Tracer
+) -> None:
     is_raw = application.__module__ == "tests.applications.raw"
-    resource = "POST /path-parameters/some-path-parameter" if is_raw else "POST /path-parameters/{parameter}"
+    resource = (
+        "POST /path-parameters/some-path-parameter"
+        if is_raw
+        else "POST /path-parameters/{parameter}"
+    )
 
     start = time.time()
     r = await client.post("/path-parameters/some-path-parameter")

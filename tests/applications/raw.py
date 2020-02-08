@@ -55,7 +55,9 @@ async def path_parameters(scope: Scope, receive: Receive, send: Send) -> None:
                 "headers": [[b"content-type", b"text/plain"]],
             }
         )
-        await send({"type": "http.response.body", "body": f"Hello, {parameter}!".encode()})
+        await send(
+            {"type": "http.response.body", "body": f"Hello, {parameter}!".encode()}
+        )
     else:
         await send(
             {

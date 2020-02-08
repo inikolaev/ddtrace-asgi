@@ -1,12 +1,12 @@
 import typing
 
-from ddtrace import Tracer, tracer as global_tracer
+from ddtrace import Span, Tracer, tracer as global_tracer
 from ddtrace.constants import ANALYTICS_SAMPLE_RATE_KEY
 from ddtrace.ext import http as http_tags
 from ddtrace.http import store_request_headers, store_response_headers
 from ddtrace.propagation.http import HTTPPropagator
 from ddtrace.settings import config
-from starlette.datastructures import CommaSeparatedStrings, Headers, URL
+from starlette.datastructures import CommaSeparatedStrings, Headers
 from starlette.requests import Request
 from starlette.routing import Match
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -109,11 +109,11 @@ class TraceMiddleware:
         finally:
             self.enrich_span(span, scope, method)
             span.finish()
-    
-    def enrich_span(self, span, scope: Scope, method: str):
-        if 'router' in scope:
+
+    def enrich_span(self, span: Span, scope: Scope, method: str) -> None:
+        if "router" in scope:
             path = None
-            routes = getattr(scope['router'], 'routes', [])
+            routes = getattr(scope["router"], "routes", [])
             for route in routes:
                 match, _ = route.matches(scope)
                 if match == Match.FULL:
@@ -123,7 +123,7 @@ class TraceMiddleware:
                     path = route.path
 
             if path is not None:
-                span.resource = f'{method} {path}'
+                span.resource = f"{method} {path}"
 
 
 def parse_tags(value: str) -> typing.Dict[str, str]:
