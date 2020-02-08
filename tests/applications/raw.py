@@ -47,14 +47,24 @@ async def exception(scope: Scope, receive: Receive, send: Send) -> None:
 async def path_parameters(scope: Scope, receive: Receive, send: Send) -> None:
     assert scope["type"] == "http"
     parameter = scope["path"].split("/")[2]
-    await send(
-        {
-            "type": "http.response.start",
-            "status": 200,
-            "headers": [[b"content-type", b"text/plain"]],
-        }
-    )
-    await send({"type": "http.response.body", "body": f"Hello, {parameter}!".encode()})
+    if scope["method"] == "GET":
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [[b"content-type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": f"Hello, {parameter}!".encode()})
+    else:
+        await send(
+            {
+                "type": "http.response.start",
+                "status": 405,
+                "headers": [[b"content-type", b"text/plain"]],
+            }
+        )
+        await send({"type": "http.response.body", "body": b"Method No Allowed"})
 
 
 async def application(scope: Scope, receive: Receive, send: Send) -> None:

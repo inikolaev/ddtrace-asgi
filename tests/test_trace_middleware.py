@@ -126,7 +126,7 @@ async def test_child(client: httpx.AsyncClient, tracer: Tracer) -> None:
 
 
 @pytest.mark.asyncio
-async def test_path_parameters(application: ASGIApp, client: httpx.Client, tracer: Tracer) -> None:
+async def test_path_parameters_full_match(application: ASGIApp, client: httpx.Client, tracer: Tracer) -> None:
     is_raw = application.__module__ == "tests.applications.raw"
     resource = "GET /path-parameters/some-path-parameter" if is_raw else "GET /path-parameters/{parameter}"
 
@@ -135,6 +135,34 @@ async def test_path_parameters(application: ASGIApp, client: httpx.Client, trace
     end = time.time()
     assert r.status_code == 200
     assert r.text == "Hello, some-path-parameter!"
+
+    traces = tracer.writer.pop_traces()
+    assert len(traces) == 1
+    spans: typing.List[Span] = traces[0]
+    assert len(spans) == 1
+    spans_by_name = {s.name: s for s in spans}
+
+    span = spans_by_name["asgi.request"]
+    assert span.span_id
+    assert span.trace_id
+    assert span.parent_id is None
+    assert span.service == "test.asgi.service"
+    assert span.resource == resource
+    assert span.get_tag("hello") is None
+    assert span.start >= start
+    assert span.duration <= end - start
+    assert span.error == 0
+
+
+@pytest.mark.asyncio
+async def test_path_parameters_partial_match(application: ASGIApp, client: httpx.Client, tracer: Tracer) -> None:
+    is_raw = application.__module__ == "tests.applications.raw"
+    resource = "POST /path-parameters/some-path-parameter" if is_raw else "POST /path-parameters/{parameter}"
+
+    start = time.time()
+    r = await client.post("/path-parameters/some-path-parameter")
+    end = time.time()
+    assert r.status_code == 405
 
     traces = tracer.writer.pop_traces()
     assert len(traces) == 1

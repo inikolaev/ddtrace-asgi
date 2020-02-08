@@ -26,7 +26,7 @@ async def exception(request: Request) -> typing.NoReturn:
     raise RuntimeError("Oops")
 
 
-@application.route("/path-parameters/{parameter}")
+@application.route("/path-parameters/{parameter}", methods=['GET'])
 async def path_parameters(request: Request) -> Response:
     parameter = request.path_params['parameter']
     return PlainTextResponse(f"Hello, {parameter}!")
